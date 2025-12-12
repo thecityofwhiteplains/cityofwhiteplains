@@ -116,8 +116,7 @@ export async function getPublishedPosts(): Promise<BlogListItem[]> {
     `
     )
     .eq("status", "published")
-    .order("published_at", { ascending: false })
-    .limit(12);
+    .order("published_at", { ascending: false });
 
   if (error || !data) {
     console.error("[WP Blog] Error loading posts:", error?.message);
