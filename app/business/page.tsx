@@ -43,6 +43,9 @@ export const metadata: Metadata = {
   },
 };
 
+// Always fetch the latest listings on each request
+export const revalidate = 0;
+
 export default async function BusinessPage() {
   const listings = await getPublicBusinessListings();
   const heroImageUrl = await getPageHeroImage("business");
