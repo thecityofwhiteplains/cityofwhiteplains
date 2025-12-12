@@ -43,6 +43,9 @@ export const metadata: Metadata = {
   },
 };
 
+// Always fetch the latest picks so admin updates show immediately.
+export const revalidate = 0;
+
 export default async function EatDrinkPage() {
   const heroImageUrl = await getPageHeroImage("eat");
   const { places, featuredIds } = await getEatDrinkContent();
