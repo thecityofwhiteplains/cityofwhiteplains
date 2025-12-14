@@ -74,9 +74,11 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ success: true, sent: recipients.length });
   } catch (err) {
-    console.error("[Email] Unable to send message:", err);
+    const message =
+      (err as any)?.message || "Unable to send email. Check SMTP settings and logs.";
+    console.error("[Email] Unable to send message:", message);
     return NextResponse.json(
-      { error: "Unable to send email. Check SMTP settings and logs." },
+      { error: message },
       { status: 500 }
     );
   }
