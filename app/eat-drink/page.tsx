@@ -1,5 +1,6 @@
 // app/eat-drink/page.tsx
 import type { Metadata } from "next";
+import Script from "next/script";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import EatDrinkPageClient from "../components/eat-drink/EatDrinkPageClient";
@@ -46,13 +47,74 @@ export const metadata: Metadata = {
 // Always fetch the latest picks so admin updates show immediately.
 export const revalidate = 0;
 
+function buildEatDrinkStructuredData(places: Awaited<ReturnType<typeof getEatDrinkContent>>["places"]) {
+  const itemListElement = places.map((place, index) => {
+    const url =
+      place.websiteUrl ||
+      place.mapsUrl ||
+      absoluteUrl(`/eat-drink#spot-${place.id}`);
+    return {
+      "@type": "ListItem",
+      position: index + 1,
+      name: place.name,
+      url,
+    };
+  });
+
+  const restaurants = places.map((place) => {
+    const url =
+      place.websiteUrl ||
+      place.mapsUrl ||
+      absoluteUrl(`/eat-drink#spot-${place.id}`);
+    const data: Record<string, unknown> = {
+      "@type": "Restaurant",
+      "@id": url,
+      name: place.name,
+      url,
+      description: place.shortDescription,
+      priceRange: place.budget,
+      servesCuisine: place.category.replace("-", " "),
+      areaServed: "White Plains, NY",
+    };
+    if (place.imageUrl) data.image = place.imageUrl;
+    if (place.address) data.address = place.address;
+    if (place.phone) data.telephone = place.phone;
+    if (place.menuUrl) data.hasMenu = place.menuUrl;
+    if (place.mapsUrl) data.map = place.mapsUrl;
+    if (place.websiteUrl) data.sameAs = [place.websiteUrl];
+    return data;
+  });
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "ItemList",
+        name: "Eat & Drink in White Plains",
+        description:
+          "Restaurants, coffee, and quick bites in White Plains, NY curated for different visit types.",
+        url: absoluteUrl("/eat-drink"),
+        itemListElement,
+      },
+      ...restaurants,
+    ],
+  };
+}
+
 export default async function EatDrinkPage() {
   const heroImageUrl = await getPageHeroImage("eat");
   const { places, featuredIds } = await getEatDrinkContent();
+  const structuredData = buildEatDrinkStructuredData(places);
 
   return (
     <div className="bg-[#FAFAFA] text-[#1C1F2A]">
       <Header />
+      <Script
+        id="eat-drink-ld-json"
+        type="application/ld+json"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <EatDrinkPageClient
         heroImageUrl={heroImageUrl}
         places={places}

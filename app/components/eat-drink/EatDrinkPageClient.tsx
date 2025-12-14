@@ -286,58 +286,62 @@ export default function EatDrinkPageClient({
           <span className="text-[10px] text-[#9CA3AF]">Updated daily.</span>
         </div>
         <div className="flex gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible sm:p-0">
-          {featuredPlaces.map((place) => (
-            <article
-              key={`featured-${place.id}`}
-              className="flex min-w-[260px] flex-col rounded-2xl bg-gradient-to-br from-[#1C1F2A] via-[#2F3F99] to-[#4B5FC6] p-3 text-[11px] text-white shadow-lg ring-1 ring-[#4B5FC6]/30 sm:min-w-0 sm:w-full sm:p-4"
-            >
-              <div className="relative overflow-hidden rounded-xl border border-white/20 bg-white/10">
-                {place.imageUrl ? (
-                  <div className="relative aspect-[4/3] w-full overflow-hidden">
-                    <Image
-                      src={place.imageUrl}
-                      alt={place.name}
-                      fill
-                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 80vw"
-                      className="object-cover"
-                      priority={false}
-                    />
+          {featuredPlaces.map((place) => {
+            const anchorId = `spot-${place.id}`;
+            return (
+              <article
+                id={anchorId}
+                key={`featured-${place.id}`}
+                className="flex min-w-[260px] flex-col rounded-2xl bg-gradient-to-br from-[#1C1F2A] via-[#2F3F99] to-[#4B5FC6] p-3 text-[11px] text-white shadow-lg ring-1 ring-[#4B5FC6]/30 sm:min-w-0 sm:w-full sm:p-4"
+              >
+                <div className="relative overflow-hidden rounded-xl border border-white/20 bg-white/10">
+                  {place.imageUrl ? (
+                    <div className="relative aspect-[4/3] w-full overflow-hidden">
+                      <Image
+                        src={place.imageUrl}
+                        alt={place.name}
+                        fill
+                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 80vw"
+                        className="object-cover"
+                        priority={false}
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex aspect-[4/3] items-center justify-center bg-white/10 text-[11px] text-white/80">
+                      Image coming soon.
+                    </div>
+                  )}
+                  <div className="absolute left-3 top-3 inline-flex items-center gap-2 rounded-full bg-[#111827]/80 px-3 py-1 text-[10px] font-semibold text-white shadow-sm ring-1 ring-white/30 backdrop-blur">
+                    ⭐ Crowd favorite
                   </div>
-                ) : (
-                  <div className="flex aspect-[4/3] items-center justify-center bg-white/10 text-[11px] text-white/80">
-                    Image coming soon.
+                </div>
+                <div className="mt-3 space-y-2">
+                  <div>
+                    <h3 className="text-sm font-semibold">{place.name}</h3>
+                    <p className="mt-1 text-[11px] text-white/80">{place.shortDescription}</p>
                   </div>
-                )}
-                <div className="absolute left-3 top-3 inline-flex items-center gap-2 rounded-full bg-[#111827]/80 px-3 py-1 text-[10px] font-semibold text-white shadow-sm ring-1 ring-white/30 backdrop-blur">
-                  ⭐ Crowd favorite
-                </div>
-              </div>
-              <div className="mt-3 space-y-2">
-                <div>
-                  <h3 className="text-sm font-semibold">{place.name}</h3>
-                  <p className="mt-1 text-[11px] text-white/80">{place.shortDescription}</p>
-                </div>
-                <div className="flex flex-wrap gap-1.5 text-[10px]">
-                  {place.goodFor.map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full bg-white/15 px-2 py-0.5 text-white"
-                    >
-                      {tag}
+                  <div className="flex flex-wrap gap-1.5 text-[10px]">
+                    {place.goodFor.map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full bg-white/15 px-2 py-0.5 text-white"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px] text-white/80">
+                    <span className="rounded-full bg-white/15 px-2 py-1 border border-white/20">
+                      {categories.find((c) => c.id === place.category)?.label || place.category}
                     </span>
-                  ))}
+                    <span className="rounded-full bg-white/15 px-2 py-1 border border-white/20">
+                      {place.budget} • {place.vibe.replace("-", " ")}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] text-white/80">
-                  <span className="rounded-full bg-white/15 px-2 py-1 border border-white/20">
-                    {categories.find((c) => c.id === place.category)?.label || place.category}
-                  </span>
-                  <span className="rounded-full bg-white/15 px-2 py-1 border border-white/20">
-                    {place.budget} • {place.vibe.replace("-", " ")}
-                  </span>
-                </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
       </section>
 
@@ -356,6 +360,7 @@ export default function EatDrinkPageClient({
 
         <div className="mt-2 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
           {filteredPlaces.map((place) => {
+            const anchorId = `spot-${place.id}`;
             const categoryLabel =
               categories.find((c) => c.id === place.category)?.label ||
               place.category;
@@ -367,6 +372,7 @@ export default function EatDrinkPageClient({
 
             return (
               <article
+                id={anchorId}
                 key={place.id}
                 className="flex flex-col rounded-2xl border border-[#ECEEF3] bg-white p-3 text-[11px] shadow-sm"
               >
