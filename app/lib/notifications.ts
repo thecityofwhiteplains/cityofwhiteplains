@@ -37,18 +37,14 @@ export async function sendEventApprovalEmail(payload: EventApprovalEmail) {
 }
 
 export async function sendBusinessSubmissionReceipt(to: string, businessName: string) {
+  const { subject, text, html } = buildBusinessSubmissionReceiptEmail(businessName);
+
   try {
     await sendEmail({
       to: [to],
-      subject: "We received your business submission",
-      text: [
-        `Thanks for submitting ${businessName || "your business"} to CityOfWhitePlains.org.`,
-        `Our team will review it and follow up if we need anything else.`,
-        ``,
-        `If this was a claim request, we'll confirm once it's approved.`,
-        ``,
-        `– CityOfWhitePlains.org`,
-      ].join("\n"),
+      subject,
+      text,
+      html,
     });
   } catch (err) {
     console.warn("[Notifications] Unable to send business submission receipt:", err);
@@ -191,4 +187,81 @@ export async function sendBusinessDirectoryInvite(to: string | string[]) {
     console.warn("[Notifications] Unable to send business directory invite:", err);
     throw err;
   }
+}
+
+function buildBusinessSubmissionReceiptEmail(businessName?: string | null) {
+  const name = businessName?.trim() || "your business";
+  const subject = "Submission Received: Your listing on CityOfWhitePlains.org";
+  const text = [
+    "Dear Business Owner,",
+    "",
+    `Thank you for submitting ${name} to the City of White Plains Community Directory.`,
+    "",
+    "We have successfully received your details.",
+    "",
+    "What happens next? To ensure cityofwhiteplains.org remains a high-quality, spam-free resource for our residents and commuters, our team manually reviews every listing before it goes live.",
+    "",
+    "Review: We are currently verifying your details to ensure accuracy and proper formatting.",
+    "Timeline: This process typically takes 24–48 hours.",
+    "Approval: You will receive a second email notification the moment your listing is published and visible to the public.",
+    "",
+    "In the meantime, no further action is required on your part.",
+    "",
+    "Thank you for helping us build a vibrant digital hub for our city!",
+    "",
+    "Best regards,",
+    "The Team at City of White Plains",
+    "cityofwhiteplains.org",
+  ].join("\n");
+
+  const html = `
+  <body style="margin:0;padding:0;background:#f6f8fb;font-family:Inter,Arial,sans-serif;color:#111827;">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f6f8fb;padding:24px 0;">
+      <tr>
+        <td align="center">
+          <table role="presentation" cellpadding="0" cellspacing="0" width="640" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(17,24,39,0.08);">
+            <tr>
+              <td style="padding:28px 32px 8px 32px;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span style="display:inline-flex;width:40px;height:40px;border-radius:12px;border:1px solid #e5e7eb;overflow:hidden;background:#fff;">
+                    <img src="${absoluteUrl("/logo-wp.png")}" alt="City of White Plains" style="width:100%;height:100%;object-fit:contain;padding:6px;" />
+                  </span>
+                  <div style="font-weight:700;font-size:16px;color:#111827;">CityOfWhitePlains.org</div>
+                </div>
+                <p style="margin:20px 0 8px 0;font-size:14px;color:#6b7280;">Submission received</p>
+                <h1 style="margin:0 0 12px 0;font-size:22px;color:#111827;line-height:1.3;">Your listing is under review</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 32px 24px 32px;font-size:15px;line-height:1.6;color:#374151;">
+                <p style="margin:0 0 12px 0;">Dear Business Owner,</p>
+                <p style="margin:0 0 12px 0;">Thank you for submitting <strong>${name}</strong> to the City of White Plains Community Directory.</p>
+                <p style="margin:0 0 12px 0;">We have successfully received your details.</p>
+                <p style="margin:0 0 12px 0;">To ensure cityofwhiteplains.org remains a high-quality, spam-free resource for our residents and commuters, our team manually reviews every listing before it goes live.</p>
+
+                <div style="margin:18px 0;padding:16px;border:1px solid #e5e7eb;border-radius:12px;background:#f9fafb;">
+                  <p style="margin:0 0 8px 0;font-weight:700;color:#111827;">What happens next?</p>
+                  <ul style="margin:0;padding-left:18px;color:#374151;">
+                    <li style="margin-bottom:6px;"><strong>Review:</strong> We are currently verifying your details to ensure accuracy and proper formatting.</li>
+                    <li style="margin-bottom:6px;"><strong>Timeline:</strong> This process typically takes 24–48 hours.</li>
+                    <li style="margin-bottom:0;"><strong>Approval:</strong> You will receive a second email notification the moment your listing is published and visible to the public.</li>
+                  </ul>
+                </div>
+
+                <p style="margin:0 0 12px 0;">In the meantime, no further action is required on your part.</p>
+                <p style="margin:0 0 16px 0;">Thank you for helping us build a vibrant digital hub for our city!</p>
+
+                <p style="margin:0 0 4px 0;">Best regards,</p>
+                <p style="margin:0 0 4px 0;">The Team at City of White Plains</p>
+                <p style="margin:0 0 0 0;"><a href="${absoluteUrl("/")}" style="color:#4b5fc6;text-decoration:none;">cityofwhiteplains.org</a></p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+  `;
+
+  return { subject, text, html };
 }
