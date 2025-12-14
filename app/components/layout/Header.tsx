@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -89,8 +90,15 @@ export default function Header() {
         {/* Left: Logo + primary nav */}
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-[#1C1F2A] text-xs font-bold text-white">
-              WP
+            <span className="relative inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-sm">
+              <Image
+                src="/logo-wp.png"
+                alt="City of White Plains logo"
+                fill
+                sizes="36px"
+                className="object-contain p-1.5"
+                priority
+              />
             </span>
             <span className="text-sm font-semibold text-[#1C1F2A]">
               CityOfWhitePlains.org

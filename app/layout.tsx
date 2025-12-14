@@ -18,6 +18,11 @@ export const metadata: Metadata = {
   title: "CityOfWhitePlains.org – Modern Guide to White Plains, NY",
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/logo-wp.png",
+    apple: "/icon.png",
+  },
   alternates: {
     canonical: "/",
   },
@@ -43,7 +48,7 @@ const orgJsonLd = {
   "@type": "Organization",
   name: SITE_NAME,
   url: SITE_URL,
-  logo: `${SITE_URL}/favicon.ico`,
+  logo: `${SITE_URL}/logo-wp.png`,
   description: SITE_DESCRIPTION,
   areaServed: "White Plains, NY",
 };
