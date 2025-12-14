@@ -96,7 +96,8 @@ export default function Header() {
                 alt="City of White Plains logo"
                 fill
                 sizes="36px"
-                className="object-contain p-1.5"
+                className="object-contain"
+                style={{ transform: "scale(1.12)" }}
                 priority
               />
             </span>
