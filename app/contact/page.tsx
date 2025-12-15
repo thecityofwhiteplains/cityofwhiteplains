@@ -6,6 +6,7 @@ import {
   SITE_NAME,
   absoluteUrl,
 } from "../lib/seo";
+import ContactForm from "../components/contact/ContactForm";
 
 export const metadata: Metadata = {
   title: "Contact | CityOfWhitePlains.org",
@@ -51,6 +52,22 @@ export default function ContactPage() {
             We&apos;re glad to hear from residents, visitors, and local businesses. Use the details
             below and we&apos;ll respond as quickly as we can.
           </p>
+        </section>
+
+        <section className="mt-8 grid gap-6 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-[#E5E7EB] sm:p-7 lg:grid-cols-2">
+          <div className="space-y-3">
+            <h2 className="text-xl font-bold text-[#111827]">Send us a note</h2>
+            <p className="text-sm text-[#6B7280]">
+              Questions, corrections, partnerships, events, or business updates—drop a short message
+              and we&apos;ll reply by email.
+            </p>
+            <ul className="list-disc space-y-1 pl-5 text-[13px] text-[#4B5563]">
+              <li>We typically respond within 1–2 business days.</li>
+              <li>Your email is used only for this reply.</li>
+              <li>For business listings, include your business name and website.</li>
+            </ul>
+          </div>
+          <ContactForm />
         </section>
 
         <section className="mt-8 space-y-3 text-sm leading-relaxed text-[#374151]">
