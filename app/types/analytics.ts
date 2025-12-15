@@ -34,6 +34,13 @@ export type AnalyticsSummary = {
     countryCode?: string | null;
     count: number;
   }[];
+  locations?: {
+    lat: number;
+    lng: number;
+    country?: string | null;
+    city?: string | null;
+    count: number;
+  }[];
   // Optional: future daily series
   daily?: { date: string; event: string; count: number }[];
 };

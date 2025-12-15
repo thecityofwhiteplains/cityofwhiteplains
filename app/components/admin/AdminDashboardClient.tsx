@@ -1866,7 +1866,7 @@ function AnalyticsTab({
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <AnalyticsMap countries={topCountries} />
+          <AnalyticsMap countries={topCountries} pins={summary.locations || []} />
         </div>
 
         <div className="rounded-2xl border border-[#E5E7EB] bg-white px-4 py-4 shadow-sm">

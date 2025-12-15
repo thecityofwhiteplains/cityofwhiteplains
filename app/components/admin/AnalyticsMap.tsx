@@ -12,6 +12,13 @@ type CountryStat = {
   countryCode?: string | null;
   count: number;
 };
+type Pin = {
+  lat: number;
+  lng: number;
+  country?: string | null;
+  city?: string | null;
+  count: number;
+};
 
 // Register English names for lookup (safe to call multiple times).
 if (!countries.getName("US", "en")) {
@@ -58,7 +65,13 @@ function useCountryLookup(countriesStat: CountryStat[]) {
   }, [countriesStat]);
 }
 
-function AnalyticsMap({ countries: countryStats }: { countries: CountryStat[] }) {
+function AnalyticsMap({
+  countries: countryStats,
+  pins = [],
+}: {
+  countries: CountryStat[];
+  pins?: Pin[];
+}) {
   const lookup = useCountryLookup(countryStats);
   const maxCount =
     countryStats.reduce((max, item) => Math.max(max, item.count), 0) || 0;
@@ -119,6 +132,22 @@ function AnalyticsMap({ countries: countryStats }: { countries: CountryStat[] })
                 stroke="#0B1220"
                 strokeWidth={0.3}
                 vectorEffect="non-scaling-stroke"
+              />
+            );
+          })}
+          {pins.map((pin, idx) => {
+            const projected = projection([pin.lng, pin.lat]);
+            if (!projected) return null;
+            const radius = Math.min(8, 3 + Math.log(pin.count + 1));
+            return (
+              <circle
+                key={`pin-${idx}-${pin.lat}-${pin.lng}`}
+                cx={projected[0]}
+                cy={projected[1]}
+                r={radius}
+                fill="rgba(34,197,94,0.85)"
+                stroke="#064E3B"
+                strokeWidth={0.6}
               />
             );
           })}

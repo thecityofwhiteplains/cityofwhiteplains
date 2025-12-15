@@ -89,6 +89,16 @@ export async function getAnalyticsSummary(
     string,
     { count: number; countryCode: string | null; countryName: string | null }
   > = {};
+  const locationPointCounts: Record<
+    string,
+    {
+      count: number;
+      lat: number;
+      lng: number;
+      country: string | null;
+      city: string | null;
+    }
+  > = {};
 
   const formatCountry = (code?: string | null, name?: string | null) => {
     if (name && name.trim().length > 0) return name;
@@ -143,6 +153,30 @@ export async function getAnalyticsSummary(
         };
       }
       routeLocationCounts[routeKey].count += 1;
+
+      const lat = typeof location.latitude === "number" ? location.latitude : null;
+      const lng = typeof location.longitude === "number" ? location.longitude : null;
+      if (
+        lat !== null &&
+        lng !== null &&
+        Number.isFinite(lat) &&
+        Number.isFinite(lng)
+      ) {
+        const key = `${lat.toFixed(3)}|${lng.toFixed(3)}`;
+        if (!locationPointCounts[key]) {
+          locationPointCounts[key] = {
+            count: 0,
+            lat,
+            lng,
+            country: formatCountry(countryCode, countryName),
+            city:
+              typeof location.city === "string" && location.city.trim().length > 0
+                ? location.city
+                : null,
+          };
+        }
+        locationPointCounts[key].count += 1;
+      }
     }
   });
 
@@ -178,6 +212,10 @@ export async function getAnalyticsSummary(
       };
     });
 
+  const locations = Object.values(locationPointCounts)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 100);
+
   return {
     since,
     totals,
@@ -185,6 +223,7 @@ export async function getAnalyticsSummary(
     topEvents,
     topCountries,
     topRouteLocations,
+    locations,
     until,
   };
 }
