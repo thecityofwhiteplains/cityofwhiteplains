@@ -53,7 +53,7 @@ export default async function AdminPage() {
   const startCardImages = await getStartCardImages();
   const pageHeroImages = await getPageHeroImages();
   const eatDrinkContent = await getEatDrinkContent();
-  const analyticsSummary = await getAnalyticsSummary(30);
+  const analyticsSummary = await getAnalyticsSummary({ days: 30 });
   const siteVerificationSettings = await getSiteVerificationSettingsServer();
 
   return (

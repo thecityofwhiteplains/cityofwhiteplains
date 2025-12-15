@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent, useEffect, useRef } from "react";
+import { useState, FormEvent, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/app/lib/supabaseClient";
 import type { BlogPostAdminSummary } from "@/app/types/blog";
 import type {
@@ -38,6 +38,7 @@ import {
 } from "@/app/types/eatDrink";
 import { saveEatDrinkSettings } from "@/app/lib/eatDrinkSettings";
 import type { AnalyticsSummary } from "@/app/types/analytics";
+import AnalyticsMap from "./AnalyticsMap";
 
 function slugifyName(name?: string | null): string {
   if (!name) return `listing-${Date.now()}`;
@@ -200,9 +201,14 @@ export default function AdminDashboardClient({
     null
   );
   const [loggingOut, setLoggingOut] = useState(false);
-  const [analyticsSummary] = useState<AnalyticsSummary | null>(
+  const [analyticsSummary, setAnalyticsSummary] = useState<AnalyticsSummary | null>(
     initialAnalyticsSummary || null
   );
+  const [analyticsRange, setAnalyticsRange] = useState<
+    { type: "preset"; days: number } | { type: "custom"; start?: string; end?: string }
+  >({ type: "preset", days: 30 });
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [eventUpdatingId, setEventUpdatingId] = useState<string | null>(null);
   const [adSaving, setAdSaving] = useState(false);
   const [adStatus, setAdStatus] = useState<"idle" | "saved" | "error">("idle");
@@ -354,6 +360,57 @@ export default function AdminDashboardClient({
       setEmailSending(false);
     }
   }
+
+  const fetchAnalyticsSummary = useCallback(
+    async (
+      range:
+        | { type: "preset"; days: number }
+        | { type: "custom"; start?: string; end?: string }
+    ) => {
+      setAnalyticsLoading(true);
+      setAnalyticsError(null);
+
+      const params = new URLSearchParams();
+      if (range.type === "custom") {
+        if (range.start) params.set("start", range.start);
+        if (range.end) params.set("end", range.end);
+      } else {
+        params.set("days", String(range.days));
+      }
+
+      try {
+        const res = await fetch(`/api/admin/analytics?${params.toString()}`, {
+          credentials: "include",
+        });
+        if (!res.ok) {
+          throw new Error("Unable to load analytics");
+        }
+        const data = await res.json();
+        setAnalyticsSummary(data);
+      } catch (err) {
+        console.warn("[analytics] fetch failed", err);
+        setAnalyticsError("Unable to load analytics. Try again.");
+      } finally {
+        setAnalyticsLoading(false);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (!initialAnalyticsSummary) {
+      fetchAnalyticsSummary(analyticsRange);
+    }
+  }, [analyticsRange, fetchAnalyticsSummary, initialAnalyticsSummary]);
+
+  const handleAnalyticsRangeChange = (
+    range:
+      | { type: "preset"; days: number }
+      | { type: "custom"; start?: string; end?: string }
+  ) => {
+    setAnalyticsRange(range);
+    fetchAnalyticsSummary(range);
+  };
 
   // Client-side refresh to pick up latest submissions/listings after page load.
   useEffect(() => {
@@ -1059,7 +1116,13 @@ export default function AdminDashboardClient({
       )}
 
       {activeTab === "analytics" && (
-        <AnalyticsTab summary={analyticsSummary} />
+        <AnalyticsTab
+          summary={analyticsSummary}
+          onChangeRange={handleAnalyticsRangeChange}
+          range={analyticsRange}
+          loading={analyticsLoading}
+          error={analyticsError}
+        />
       )}
     </main>
   );
@@ -1649,11 +1712,25 @@ function PageSettingsTab({
   );
 }
 
+type AnalyticsRange =
+  | { type: "preset"; days: number }
+  | { type: "custom"; start?: string; end?: string };
+
 type AnalyticsTabProps = {
   summary: AnalyticsSummary | null;
+  range: AnalyticsRange;
+  onChangeRange: (range: AnalyticsRange) => void;
+  loading: boolean;
+  error: string | null;
 };
 
-function AnalyticsTab({ summary }: AnalyticsTabProps) {
+function AnalyticsTab({
+  summary,
+  range,
+  onChangeRange,
+  loading,
+  error,
+}: AnalyticsTabProps) {
   if (!summary) {
     return (
       <section className="rounded-3xl border border-[#E5E7EB] bg-white px-5 py-6 text-xs sm:px-7 sm:py-7">
@@ -1670,12 +1747,37 @@ function AnalyticsTab({ summary }: AnalyticsTabProps) {
   }
 
   const cards = [
-    { label: "All events (30d)", value: summary.totals.all },
     { label: "Page views", value: summary.totals.page_view },
+    { label: "Directory filters", value: summary.totals.directory_filter },
+    {
+      label: "Directory outbound clicks",
+      value: summary.totals.directory_outbound_click,
+    },
+    { label: "Directory form submits", value: summary.totals.directory_form_submit },
     { label: "Claim clicks", value: summary.totals.claim_click },
     { label: "Claim submits", value: summary.totals.claim_submit },
     { label: "New submits", value: summary.totals.new_submit },
+    { label: "Other outbound clicks", value: summary.totals.outbound_click },
+    { label: "Blog reactions", value: summary.totals.blog_reaction },
+    { label: "Blog scroll depth hits", value: summary.totals.blog_scroll },
   ];
+  const topCountries = summary.topCountries || [];
+  const topRouteLocations = summary.topRouteLocations || [];
+  const presetRanges = [
+    { label: "24h", days: 1 },
+    { label: "7d", days: 7 },
+    { label: "30d", days: 30 },
+    { label: "3mo", days: 90 },
+    { label: "6mo", days: 180 },
+    { label: "12mo", days: 365 },
+  ];
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+  const activePreset = range.type === "preset" ? range.days : null;
+  const rangeLabel =
+    range.type === "custom" && range.start
+      ? `${range.start}${range.end ? ` → ${range.end}` : ""}`
+      : `${summary.since}${summary.until ? ` → ${summary.until}` : ""}`;
 
   return (
     <section className="space-y-6">
@@ -1683,24 +1785,115 @@ function AnalyticsTab({ summary }: AnalyticsTabProps) {
         <div>
           <h2 className="text-lg font-semibold text-[#111827]">Analytics</h2>
           <p className="text-[11px] text-[#6B7280]">
-            Last 30 days of on-site events captured via the lightweight tracker.
+            On-site events captured via the lightweight tracker for the selected range.
           </p>
         </div>
-        <p className="text-[11px] text-[#6B7280]">
-          Since: <span className="font-semibold text-[#111827]">{summary.since}</span>
-        </p>
+        <div className="flex flex-col items-end gap-2 text-[11px] text-[#6B7280]">
+          <div className="flex flex-wrap items-center gap-2">
+            {presetRanges.map((preset) => (
+              <button
+                key={preset.label}
+                type="button"
+                onClick={() => onChangeRange({ type: "preset", days: preset.days })}
+                className={[
+                  "rounded-full border px-3 py-1 font-semibold transition",
+                  activePreset === preset.days
+                    ? "border-[#4B5FC6] bg-[#EEF0FF] text-[#4B5FC6]"
+                    : "border-[#E5E7EB] bg-white text-[#4B5563] hover:bg-[#F3F4F6]",
+                ].join(" ")}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="date"
+              value={customStart}
+              onChange={(e) => setCustomStart(e.target.value)}
+              className="w-32 rounded-lg border border-[#E5E7EB] px-2 py-1 text-[11px] text-[#111827]"
+              aria-label="Start date"
+            />
+            <span className="text-[#9CA3AF]">→</span>
+            <input
+              type="date"
+              value={customEnd}
+              onChange={(e) => setCustomEnd(e.target.value)}
+              className="w-32 rounded-lg border border-[#E5E7EB] px-2 py-1 text-[11px] text-[#111827]"
+              aria-label="End date"
+            />
+            <button
+              type="button"
+              onClick={() =>
+                customStart &&
+                onChangeRange({ type: "custom", start: customStart, end: customEnd || undefined })
+              }
+              disabled={!customStart}
+              className="rounded-full border border-[#E5E7EB] px-3 py-1 font-semibold text-[#4B5563] transition hover:bg-[#F3F4F6] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Apply custom
+            </button>
+          </div>
+          <p className="text-right text-[11px] text-[#6B7280]">
+            Range: <span className="font-semibold text-[#111827]">{rangeLabel}</span>
+          </p>
+        </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        {cards.map((card) => (
+      {error && (
+        <div className="rounded-2xl border border-[#FCA5A5] bg-[#FEF2F2] px-4 py-3 text-[11px] text-[#991B1B]">
+          {error}
+        </div>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {cards.map((card, idx) => (
           <div
-            key={card.label}
+            key={`${card.label}-${idx}`}
             className="rounded-2xl border border-[#E5E7EB] bg-white px-4 py-3 shadow-sm"
           >
             <p className="text-[11px] text-[#6B7280]">{card.label}</p>
             <p className="text-xl font-semibold text-[#111827]">{card.value}</p>
           </div>
         ))}
+      </div>
+
+      {loading && (
+        <div className="rounded-2xl border border-dashed border-[#E5E7EB] bg-[#F9FAFB] px-4 py-3 text-[11px] text-[#4B5563]">
+          Loading analytics for the selected range…
+        </div>
+      )}
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <AnalyticsMap countries={topCountries} />
+        </div>
+
+        <div className="rounded-2xl border border-[#E5E7EB] bg-white px-4 py-4 shadow-sm">
+          <p className="text-sm font-semibold text-[#111827]">
+            Page impressions by location
+          </p>
+          <p className="text-[11px] text-[#6B7280]">
+            Top routes paired with their most frequent visitor country.
+          </p>
+          <div className="mt-3 space-y-2 text-[12px]">
+            {topRouteLocations.length === 0 && (
+              <p className="text-[11px] text-[#9CA3AF]">No geo-tagged page views yet.</p>
+            )}
+            {topRouteLocations.map((item) => (
+              <div
+                key={`${item.route}-${item.country}-${item.countryCode || "xx"}`}
+                className="flex items-center justify-between rounded-xl bg-[#F9FAFB] px-3 py-2"
+              >
+                <div className="flex flex-col">
+                  <span className="text-[#111827]">{item.route}</span>
+                  <span className="text-[11px] text-[#6B7280]">{item.country}</span>
+                </div>
+                <span className="text-[#4B5FC6] font-semibold">{item.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -1747,14 +1940,6 @@ function AnalyticsTab({ summary }: AnalyticsTabProps) {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-dashed border-[#E5E7EB] bg-[#F9FAFB] px-4 py-3 text-[11px] text-[#4B5563]">
-        <p className="font-semibold text-[#111827]">Next steps to enrich data</p>
-        <ul className="mt-2 list-disc space-y-1 pl-5">
-          <li>Add custom events for directory filters, outbound business clicks, and form submissions.</li>
-          <li>Log blog engagement (scroll depth, reactions) to track reader quality.</li>
-          <li>Set up a nightly Supabase cron to aggregate into a daily table for faster charts.</li>
-        </ul>
-      </div>
     </section>
   );
 }

@@ -141,10 +141,10 @@ export default function BusinessPageClient({ listings, heroImageUrl }: Props) {
                       type="button"
                       onClick={() => {
                         setActiveCategory(cat);
-                        trackEvent("page_view", {
+                        trackEvent("directory_filter", {
                           route: "/business",
-                          action: "category_filter",
-                          category: cat,
+                          filterType: "category",
+                          value: cat,
                         });
                       }}
                       className={[
@@ -178,10 +178,10 @@ export default function BusinessPageClient({ listings, heroImageUrl }: Props) {
                       type="button"
                       onClick={() => {
                         setAudienceFilter(opt.id as typeof audienceFilter);
-                        trackEvent("page_view", {
+                        trackEvent("directory_filter", {
                           route: "/business",
-                          action: "audience_filter",
-                          audience: opt.id,
+                          filterType: "audience",
+                          value: opt.id,
                         });
                       }}
                       className={[
@@ -340,10 +340,16 @@ export default function BusinessPageClient({ listings, heroImageUrl }: Props) {
                             target="_blank"
                             rel="noreferrer"
                             onClick={() =>
-                              trackEvent("outbound_click", {
-                                listingId: biz.id,
-                                url: biz.websiteUrl,
-                              })
+                              {
+                                trackEvent("directory_outbound_click", {
+                                  listingId: biz.id,
+                                  url: biz.websiteUrl,
+                                });
+                                trackEvent("outbound_click", {
+                                  listingId: biz.id,
+                                  url: biz.websiteUrl,
+                                });
+                              }
                             }
                             className="rounded-full bg-[#1C1F2A] px-3 py-1 text-[11px] font-semibold text-white hover:bg-black"
                           >

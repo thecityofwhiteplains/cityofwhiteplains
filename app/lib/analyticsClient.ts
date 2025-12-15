@@ -2,6 +2,9 @@
 
 type AnalyticsEvent =
   | "page_view"
+  | "directory_filter"
+  | "directory_outbound_click"
+  | "directory_form_submit"
   | "claim_click"
   | "claim_submit"
   | "new_submit"

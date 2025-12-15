@@ -185,6 +185,11 @@ export default function ListYourBusinessPageClient() {
     }
 
     // Fire analytics event (best-effort)
+    trackEvent("directory_form_submit", {
+      mode,
+      category: payload.category,
+      linkedBusiness: payload.linkedBusiness,
+    });
     trackEvent(mode === "claim" ? "claim_submit" : "new_submit", {
       category: payload.category,
       linkedBusiness: payload.linkedBusiness,
