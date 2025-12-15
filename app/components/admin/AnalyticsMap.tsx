@@ -46,11 +46,11 @@ function getFill(
   const key = typeof geoId === "number" ? String(geoId) : geoId;
   const entry = lookup.get(key);
   if (!entry || maxCount === 0) {
-    return "#0f172a";
+    return "#1f2937";
   }
   const ratio = Math.min(1, entry.count / maxCount);
-  const alpha = 0.18 + ratio * 0.65;
-  return `rgba(79, 70, 229, ${alpha.toFixed(3)})`;
+  const shade = Math.round(230 - ratio * 120); // 230 -> 110 as density rises
+  return `rgb(${shade}, ${shade}, ${shade})`;
 }
 
 function useCountryLookup(countriesStat: CountryStat[]) {
@@ -100,7 +100,7 @@ function AnalyticsMap({
         </span>
       </div>
 
-      <div className="mt-3 flex-1 overflow-hidden rounded-2xl bg-[#0B1220]">
+      <div className="mt-3 flex-1 overflow-hidden rounded-2xl bg-[#0B0B0D]">
         <svg
           viewBox={`0 0 ${WORLD_WIDTH} ${WORLD_HEIGHT}`}
           className="h-full w-full"
@@ -109,15 +109,15 @@ function AnalyticsMap({
         >
           <defs>
             <linearGradient id="map-glow" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#111827" />
-              <stop offset="100%" stopColor="#0B1220" />
+              <stop offset="0%" stopColor="#111111" />
+              <stop offset="100%" stopColor="#0B0B0D" />
             </linearGradient>
           </defs>
           <rect width="100%" height="100%" fill="url(#map-glow)" />
           <path
             d={graticulePath}
             fill="none"
-            stroke="#1f2937"
+            stroke="#2d2f34"
             strokeWidth={0.25}
             vectorEffect="non-scaling-stroke"
           />
@@ -129,7 +129,7 @@ function AnalyticsMap({
                 key={`${geo.id}-${idx}`}
                 d={path}
                 fill={fill}
-                stroke="#0B1220"
+                stroke="#0c0c0e"
                 strokeWidth={0.3}
                 vectorEffect="non-scaling-stroke"
               />
@@ -145,8 +145,8 @@ function AnalyticsMap({
                 cx={projected[0]}
                 cy={projected[1]}
                 r={radius}
-                fill="rgba(34,197,94,0.85)"
-                stroke="#064E3B"
+                fill="rgba(255,255,255,0.9)"
+                stroke="#0f172a"
                 strokeWidth={0.6}
               />
             );
@@ -163,10 +163,10 @@ function AnalyticsMap({
           {countryStats.slice(0, 4).map((country) => (
             <div
               key={`${country.country}-${country.countryCode || "unknown"}`}
-              className="flex items-center justify-between rounded-xl bg-[#F9FAFB] px-3 py-2 text-[#111827]"
+              className="flex items-center justify-between rounded-xl bg-[#F5F5F5] px-3 py-2 text-[#111827]"
             >
               <span className="truncate">{country.country}</span>
-              <span className="text-[#4B5FC6] font-semibold">{country.count}</span>
+              <span className="font-semibold text-[#111827]">{country.count}</span>
             </div>
           ))}
         </div>
