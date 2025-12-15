@@ -145,8 +145,8 @@ function AnalyticsMap({
                 cx={projected[0]}
                 cy={projected[1]}
                 r={radius}
-                fill="rgba(255,255,255,0.9)"
-                stroke="#0f172a"
+                fill="rgba(34,197,94,0.9)"
+                stroke="#065F46"
                 strokeWidth={0.6}
               />
             );
