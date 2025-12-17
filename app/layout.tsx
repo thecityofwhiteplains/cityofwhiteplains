@@ -11,6 +11,7 @@ import {
 } from "./lib/seo";
 import { Suspense } from "react";
 import AnalyticsTracker from "./components/AnalyticsTracker";
+import LiveVisitorTracker from "./components/LiveVisitorTracker";
 import { getSiteVerificationSettingsServer } from "@/app/lib/siteVerificationSettingsServer";
 
 export const metadata: Metadata = {
@@ -74,6 +75,9 @@ export default function RootLayout({
       <body className="font-sans">
         <Suspense fallback={null}>
           <AnalyticsTracker />
+        </Suspense>
+        <Suspense fallback={null}>
+          <LiveVisitorTracker />
         </Suspense>
         {children}
       </body>

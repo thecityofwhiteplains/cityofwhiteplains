@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent, useEffect, useRef, useCallback } from "react";
+import { useState, FormEvent, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "@/app/lib/supabaseClient";
 import type { BlogPostAdminSummary } from "@/app/types/blog";
 import type {
@@ -40,6 +40,7 @@ import { saveEatDrinkSettings } from "@/app/lib/eatDrinkSettings";
 import type { AnalyticsSummary } from "@/app/types/analytics";
 import AnalyticsMap from "./AnalyticsMap";
 import BlogRichTextEditor from "./BlogRichTextEditor";
+import type { LiveVisitorsResponse } from "@/app/types/liveVisitors";
 
 function slugifyName(name?: string | null): string {
   if (!name) return `listing-${Date.now()}`;
@@ -1780,6 +1781,51 @@ function AnalyticsTab({
       ? `${range.start}${range.end ? ` → ${range.end}` : ""}`
       : `${summary.since}${summary.until ? ` → ${summary.until}` : ""}`;
 
+  const [live, setLive] = useState<LiveVisitorsResponse | null>(null);
+  const [liveError, setLiveError] = useState<string | null>(null);
+  const [liveLoading, setLiveLoading] = useState(false);
+  const [liveWindowSeconds, setLiveWindowSeconds] = useState(120);
+
+  const refreshLive = useCallback(async () => {
+    setLiveLoading(true);
+    setLiveError(null);
+    try {
+      const res = await fetch(
+        `/api/admin/live-visitors?windowSeconds=${liveWindowSeconds}`,
+        { credentials: "include" }
+      );
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json?.error || "Unable to load live visitors.");
+      }
+      const payload = (await res.json()) as LiveVisitorsResponse;
+      setLive(payload);
+    } catch (err: any) {
+      setLiveError(err?.message || "Unable to load live visitors.");
+      setLive(null);
+    } finally {
+      setLiveLoading(false);
+    }
+  }, [liveWindowSeconds]);
+
+  useEffect(() => {
+    refreshLive();
+    const id = window.setInterval(refreshLive, 10_000);
+    return () => window.clearInterval(id);
+  }, [refreshLive]);
+
+  const routeRollup = useMemo(() => {
+    const counts: Record<string, number> = {};
+    (live?.visitors || []).forEach((v) => {
+      const key = v.route || "(unknown)";
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([route, count]) => ({ route, count }));
+  }, [live?.visitors]);
+
   return (
     <section className="space-y-6">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
@@ -1838,6 +1884,95 @@ function AnalyticsTab({
           <p className="text-right text-[11px] text-[#6B7280]">
             Range: <span className="font-semibold text-[#111827]">{rangeLabel}</span>
           </p>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-[#E5E7EB] bg-white px-4 py-4 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-[#B91C1C]">Live visitors</p>
+            <p className="text-[11px] text-[#6B7280]">
+              Active sessions in the last {Math.round(liveWindowSeconds / 60)} minutes.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-emerald-50 px-3 py-1 text-[10px] font-semibold text-emerald-700">
+              {live?.count ?? 0} online
+            </span>
+            <select
+              value={liveWindowSeconds}
+              onChange={(e) => setLiveWindowSeconds(parseInt(e.target.value, 10))}
+              className="rounded-full border border-[#E5E7EB] bg-white px-3 py-1 text-[10px] font-semibold text-[#4B5563] outline-none hover:bg-[#F3F4F6]"
+              aria-label="Live visitors window"
+            >
+              <option value={60}>1 min</option>
+              <option value={120}>2 min</option>
+              <option value={300}>5 min</option>
+              <option value={600}>10 min</option>
+            </select>
+            <button
+              type="button"
+              onClick={refreshLive}
+              className="rounded-full border border-[#E5E7EB] bg-white px-3 py-1 text-[10px] font-semibold text-[#4B5563] hover:bg-[#F3F4F6] disabled:opacity-60"
+              disabled={liveLoading}
+            >
+              {liveLoading ? "Refreshing…" : "Refresh"}
+            </button>
+          </div>
+        </div>
+
+        {liveError && (
+          <p className="mt-3 rounded-xl border border-[#FCA5A5] bg-[#FEF2F2] px-3 py-2 text-[11px] text-[#991B1B]">
+            {liveError}
+          </p>
+        )}
+
+        {routeRollup.length > 0 && (
+          <div className="mt-3">
+            <p className="text-[11px] font-semibold text-[#111827]">Top live pages</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {routeRollup.map((item) => (
+                <span
+                  key={item.route}
+                  className="inline-flex items-center gap-2 rounded-full border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-1 text-[10px] font-semibold text-[#111827]"
+                >
+                  <span className="max-w-[160px] truncate">{item.route}</span>
+                  <span className="rounded-full bg-white px-2 py-0.5 text-[10px] text-[#4B5563]">
+                    {item.count}
+                  </span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {(live?.visitors || []).slice(0, 9).map((v) => {
+            const loc = v.meta?.location;
+            const where = [loc?.city, loc?.region, loc?.countryName || loc?.countryCode]
+              .filter(Boolean)
+              .join(", ");
+            const nowMs = live?.now ? new Date(live.now).getTime() : Date.now();
+            return (
+              <div
+                key={v.session_id}
+                className="rounded-2xl border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2"
+              >
+                <p className="truncate text-[12px] font-semibold text-[#111827]">
+                  {v.route}
+                </p>
+                <p className="mt-0.5 truncate text-[11px] text-[#6B7280]">
+                  {where || "Unknown location"}
+                </p>
+                <p className="mt-1 text-[10px] font-semibold text-[#111827]">
+                  {formatAgo(nowMs, v.last_seen)}
+                </p>
+              </div>
+            );
+          })}
+          {(live?.visitors || []).length === 0 && !liveError && (
+            <p className="text-[11px] text-[#9CA3AF]">No active visitors right now.</p>
+          )}
         </div>
       </div>
 
@@ -1943,6 +2078,17 @@ function AnalyticsTab({
 
     </section>
   );
+}
+
+function formatAgo(nowMs: number, iso: string) {
+  const then = new Date(iso).getTime();
+  if (!Number.isFinite(then)) return "";
+  const sec = Math.max(0, Math.round((nowMs - then) / 1000));
+  if (sec < 60) return `${sec}s ago`;
+  const min = Math.round(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.round(min / 60);
+  return `${hr}h ago`;
 }
 
 type EatDrinkSettingsTabProps = {
