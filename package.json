@@ -21,7 +21,16 @@
     "i18n-iso-countries": "^7.11.0",
     "d3-geo": "^3.1.1",
     "topojson-client": "^3.1.0",
-    "world-atlas": "^2.0.2"
+    "world-atlas": "^2.0.2",
+    "@tiptap/react": "^2.26.1",
+    "@tiptap/starter-kit": "^2.26.1",
+    "@tiptap/extension-color": "^2.26.1",
+    "@tiptap/extension-highlight": "^2.26.1",
+    "@tiptap/extension-image": "^2.26.1",
+    "@tiptap/extension-link": "^2.26.1",
+    "@tiptap/extension-text-align": "^2.26.1",
+    "@tiptap/extension-text-style": "^2.26.1",
+    "@tiptap/extension-underline": "^2.26.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.17",
