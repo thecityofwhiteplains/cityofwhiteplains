@@ -136,6 +136,7 @@ export default function AdminDashboardClient({
     events: initialPageHeroImages?.events || "",
     eat: initialPageHeroImages?.eat || "",
     business: initialPageHeroImages?.business || "",
+    community: initialPageHeroImages?.community || "",
   });
   const [promoImage, setPromoImage] = useState(
     initialPromoCard?.imageUrl || DEFAULT_PROMO_CARD.imageUrl
@@ -1222,6 +1223,7 @@ function PageSettingsTab({
           { id: "events", label: "Events" },
           { id: "eat", label: "Eat & Drink" },
           { id: "business", label: "Business" },
+          { id: "community", label: "Community" },
         ].map((tab) => {
           const active = activePage === tab.id;
           return (
@@ -3008,7 +3010,8 @@ function AdsTab({ ads, onSaveAd, saving, status, setStatus, adsError }: AdsTabPr
         <div className="space-y-1">
           <h2 className="text-sm font-semibold text-[#111827]">Ads / affiliate placements</h2>
           <p className="text-[11px] text-[#6B7280]">
-            Manage CTA cards for lodging, tickets, rentals. Active ads show on Visit and Events pages.
+            Manage CTA cards for lodging, tickets, rentals, and the Community page banner. Active ads
+            show on Visit, Events, and Community pages where the placement matches.
           </p>
         </div>
         {status === "saved" && (
@@ -3104,6 +3107,7 @@ function AdsTab({ ads, onSaveAd, saving, status, setStatus, adsError }: AdsTabPr
               <option value="events_lodging">Events page – lodging CTA</option>
               <option value="events_tickets">Events page – tickets CTA</option>
               <option value="transport">Transport / car rentals</option>
+              <option value="community_banner">Community page – banner CTA</option>
             </select>
           </div>
           <div className="grid gap-2">

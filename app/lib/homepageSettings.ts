@@ -10,6 +10,7 @@ const PAGE_HERO_KEYS: Record<PageHeroKey, string> = {
   events: "page_events_hero_image_url",
   eat: "page_eat_hero_image_url",
   business: "page_business_hero_image_url",
+  community: "page_community_hero_image_url",
 };
 
 export type PromoCardSettings = {
@@ -26,7 +27,13 @@ export type StartCardImages = {
   business?: string | null;
 };
 
-export type PageHeroKey = "home" | "visit" | "events" | "eat" | "business";
+export type PageHeroKey =
+  | "home"
+  | "visit"
+  | "events"
+  | "eat"
+  | "business"
+  | "community";
 export type PageHeroImages = Record<PageHeroKey, string | null | undefined>;
 
 /**
@@ -115,6 +122,7 @@ export async function getPageHeroImages(): Promise<PageHeroImages> {
       events: null,
       eat: null,
       business: null,
+      community: null,
     };
   }
 
@@ -124,6 +132,7 @@ export async function getPageHeroImages(): Promise<PageHeroImages> {
     events: null,
     eat: null,
     business: null,
+    community: null,
   };
 
   data.forEach((row: { key: string; value: string | null }) => {
