@@ -2,6 +2,10 @@ import { MetadataRoute } from "next";
 import { supabase } from "@/app/lib/supabaseClient";
 import { SITE_URL } from "@/app/lib/seo";
 
+// Always fetch fresh data so removed blog posts don't linger in the sitemap.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = SITE_URL;
   const staticPaths = [
