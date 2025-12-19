@@ -94,6 +94,7 @@ export async function POST(request: Request) {
 
   revalidatePath("/visit");
   revalidatePath("/events");
+  revalidatePath("/community");
 
   return NextResponse.json({ ad: data }, { status: 201 });
 }

@@ -64,6 +64,7 @@ export async function PATCH(
 
   revalidatePath("/visit");
   revalidatePath("/events");
+  revalidatePath("/community");
 
   return NextResponse.json({ ad: data }, { status: 200 });
 }
